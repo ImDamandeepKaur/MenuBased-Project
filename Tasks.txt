@@ -1,0 +1,166 @@
+Tasks:
+Docker: 
+
+1. GUI: 
+In docker2024 OS {linux}
+
+"https://www.cloudthat.com/resources/blog/run-gui-application-inside-docker-container#steps-to-run-gui-application-inside-docker-container"
+
+-Formed vi Dockerfile
+	
+FROM rockylinux:8
+RUN yum install firefox -y
+CMD firefox
+
+docker build -t myfirefox:v1 .
+
+docker run -it --name firefoxos1 --env="DISPLAY" --net="host" myfirefox:v1
+
+2.Python in docker:
+
+mkdir pythonInDocker
+cd pythonInDocker
+
+	vi dockerfile
+		# Use the official Python image from Docker Hub
+		FROM python:3.9-slim
+
+		# Set the working directory in the container
+		WORKDIR /usr/src/app
+
+		# Copy your application code (optional, not needed 			for interactive shell)
+		# COPY . .
+
+		# Install any required dependencies (optional, add if needed)
+		# RUN pip install some_package
+
+		# Set the default command to bash
+		CMD ["bash"]
+	docker build -t my-python-image .
+	docker run -it my-python-image
+
+3. ML model in docker:
+mkdir ml-docker
+cd ml-docker/
+
+vi app.py
+	from flask import Flask, request, jsonify
+	import pandas as pd
+
+	app = Flask(__name__)
+
+	@app.route('/upload', methods=['POST'])
+	def upload():
+    		file = request.files['file']
+    		if file and file.filename.endswith('.csv'):
+        	df = pd.read_csv(file)
+        
+        	# Example operation: Get some basic statistics
+        	summary = {
+            		'columns': list(df.columns),
+            		'num_rows': len(df),
+            		'num_columns': len(df.columns),
+            		'first_row': df.head(1).to_dict(orient='records')
+        		}
+        
+        	return jsonify(summary)
+    		else:
+       	 	return jsonify({'error': 'Invalid file type'}), 400
+
+		if __name__ == '__main__':
+    		app.run(debug=True, host='0.0.0.0')
+
+vi requirements.txt
+	flask
+	scikit-learn
+	# or tensorflow
+	pandas	
+	matplotlib
+
+vi dockerfile
+	# Use the official Python image from the Docker Hub
+	FROM python:3.9-slim
+
+	# Set the working directory
+	WORKDIR /app
+
+	# Copy the requirements file into the container
+	COPY requirements.txt requirements.txt
+
+	# Install the dependencies
+	RUN pip install -r requirements.txt
+
+	# Copy the rest of the application code
+	COPY . .
+
+	# Specify the command to run the application
+	CMD ["python", "app.py"]
+
+	# Expose the port the app runs on
+	EXPOSE 5000
+docker build -t ml-model .
+
+cd /var/www/html
+	systemctl start httpd
+	
+	vi ml-docker.html
+		<!DOCTYPE html>
+		<html>
+		<body>
+
+		<h2>Upload CSV File</h2>
+
+		<form action="http://127.0.0.1:5000/upload" method="post" enctype="multipart/form-data" accept = ".csv">
+  		Select CSV file to upload:
+  		<input type="file" name="file" id="fileToUpload" accept=".csv">
+  		<input type="submit" value="Upload File" name="submit">
+		</form>
+
+		</body>
+		</html>
+	firefox ml-docker.html
+
+4.Webserver in docker:
+
+cd /var/www/html
+
+mkdir webserver/
+cd webserver/
+
+	-vi dockerfile
+
+	# Dockerfile in /var/www/html
+	FROM nginx:latest
+
+	# Correct COPY path if Dockerfile and html directory are in the same folder
+	COPY ./ /usr/share/nginx/html/
+
+	-cat > index.html
+	Hello World!
+	
+	docker build -t my-nginx-server
+	docker run -d -p 80:80 --name nginx-server my-nginx-server
+	docker exec -it nginx-server /bin/bash
+		ls
+
+Open new tab
+
+	ifconfig
+	firefox http://<your_url>
+
+	
+	
+
+
+
+Linux:
+
+1. Whatsapp message send through terminal
+
+nano send_whatsapp_message.sh
+	
+Google API key: 
+https://developers.google.com/maps/documentation/javascript/get-api-key
+
+
+
