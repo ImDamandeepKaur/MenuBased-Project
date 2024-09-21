@@ -24,8 +24,11 @@ cd MenuBasedProject
 Explore the project structure:
 
 All frontend code is located in the html folder.
+
 All backend python scripts can be found in the backend Script.
+
 There is an Text file having commands to execute program of linux, docker etc. Step by Step in terminal folder. 
+
 Run the application:
 
 On AWS Cloud or Linux System:
