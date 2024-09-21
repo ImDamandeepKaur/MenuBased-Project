@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive API Webpage</title>
+    <style>
+        /* Existing styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f2944;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+            font-size: larger;
+            font-weight: bolder;
+        }
+        .chat-box {
+            background: #609cc2;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 900px;
+            height: 900px;
+            max-width: 90%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .chat-input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: x-large;
+            font-weight: 600;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .chat-log {
+            margin-bottom:30%;
+            max-height: 70%;
+            overflow-y: auto;
+        }
+        .chat-log div {
+            margin-bottom: 15px;
+        }
+        .user {
+            text-align: right;
+        }
+        .response {
+            text-align: left;
+            font-size: large;
+            font-weight: 700;
+        }
+        .hidden {
+            display: none;
+        }
+        .form-container {
+          background-color: #002470;
+          padding: 20px;
+          border-radius: 8px;
+          border: 1px solid #ccc;
+          width: 60%;
+          height: 70%;
+          margin-top: 10px;
+          box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      
+      .form-container form {
+          display: flex;
+          flex-direction: column;
+      }
+      
+      .form-container label {
+          margin-bottom: 5px;
+          font-weight: bold;
+      }
+      
+      .form-container input,
+      .form-container textarea {
+          margin-bottom: 15px;
+          padding: 10px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+      }
+      
+      .form-container button {
+          background-color: #007bff;
+          color: rgb(255, 255, 255);
+          border: none;
+          padding: 10px;
+          border-radius: 5px;
+          cursor: pointer;
+      }
+      
+      .form-container button:hover {
+          background-color: #0056b3;
+      }
+
+      /* Styles for camera access */
+      video, canvas {
+          border: 2px solid #000;
+          margin-bottom: 10px;
+          display: block;
+      }
+      button {
+          padding: 10px 20px;
+          background-color: #609cc2;
+          color: white;
+          border: none;
+          cursor: pointer;
+          font-size: 16px;
+          margin-left: 45%;
+      }
+      button:hover {
+          background-color: #0056b3;
+      }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Welcome To Jenni</h1>
+    <div class="chat-box">
+        <div class="chat-log" id="chat-log"></div>
+        <input type="text" id="chat-input" class="chat-input" placeholder="What would you like to do? (e.g., 'Send a WhatsApp message')">
+        <!-- Mic button -->
+        <button id="mic-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="black" viewBox="0 0 24 24">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3s-3 1.34-3 3v6c0 1.66 1.34 3 3 3zm7-3v-2c0-.55-.45-1-1-1s-1 .45-1 1v2c0 2.76-2.24 5-5 5s-5-2.24-5-5v-2c0-.55-.45-1-1-1s-1 .45-1 1v2c0 3.87 3.13 7 7 7v2h-3c-.55 0-1 .45-1 1s.45 1 1 1h8c.55 0 1-.45 1-1s-.45-1-1-1h-3v-2c3.87 0 7-3.13 7-7z"/>
+            </svg>
+            Speak
+        </button>
+    </div>
+
+    <!-- Camera access section (initially hidden) -->
+    <div class="camera-section hidden" id="camera-section">
+        <h2>Camera Access</h2>
+        <video id="video" width="640" height="480" autoplay></video>
+        <button id="snap">Capture Photo</button>
+        <canvas id="canvas" width="640" height="480"></canvas>
+        <button id="close-camera">Close Camera</button> <!-- New close camera button -->
+    </div>
+
+
+    <script>
+        document.getElementById('chat-input').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                const input = event.target.value.trim().toLowerCase();
+                const chatLog = document.getElementById('chat-log');
+
+                if (input) {
+                    addChatLog('user', input);
+
+                    if (input.includes('whatsapp')) {
+                        showForm('whatsapp');
+                    } else if (input.includes('bulk')) {
+                        showForm('bulk');
+                    } else if (input.includes('call')) {
+                        showForm('call');
+                    }  else if (input.includes('sms')) {
+                        showForm('sms');
+                    } else if (input.includes('email')) {
+                        showForm('instantemail');
+                    } else if (input.includes('schedule')) {
+                        showForm('schedulemail');
+                    }  else if (input.includes('instagram')) {
+                        showForm('instagram');
+                    }  else if (input.includes('coordinates')) {
+                        showForm('coordinates');
+                    } else if (input.includes('camera')) {
+                        showCameraAccess();
+                    } else {
+                        addChatLog('response', "I'm not sure what you mean. Try asking to make a call, sms, send a WhatsApp message,to send a bulk WhatsApp message, an email, post on Instagram, or access the camera.");
+                    }
+
+                    event.target.value = '';
+                }
+            }
+        });
+
+        function addChatLog(type, text) {
+            const chatLog = document.getElementById('chat-log');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+
+            if (type === 'response') {
+              messageDiv.innerHTML = text;
+          } else {
+              messageDiv.textContent = text;
+          }
+            chatLog.appendChild(messageDiv);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function showForm(type) {
+          let formHtml = '';
+          if (type === 'whatsapp') {
+              formHtml = `
+                  <div class="form-container">
+                      <form id="whatsapp-form">
+                          <label for="phone">Phone Number:</label><br>
+                          <input type="text" id="phone" name="phone" required><br><br>
+                          <label for="message">Message:</label><br>
+                          <textarea id="message" name="message" required></textarea><br><br>
+                          <button type="button" onclick="sendWhatsApp()">Send WhatsApp</button>
+                      </form>
+                  </div>
+              `;
+          } else if (type === 'bulk') {
+              formHtml = `
+                  <div class="form-container">
+                      <form id="bulkwhatsmsg-form">
+                          <label for="msg">Message:</label><br>
+                          <textarea id="msg" name="msg" required></textarea><br><br>
+                          <button type="button" onclick="sendbulkWhatsApp()">Send Bulk WhatsApp Message</button>
+                      </form>
+                  </div>
+              `;
+          } else if (type === 'instantemail') {
+            formHtml = `
+                <div class="form-container">
+                    <form id="email-form">
+                        <label for="recieverid">Email Address:</label><br>
+                        <input type="text" id="recieverid" name="recieverid" required><br><br>
+                        <label for="subj">subj:</label><br>
+                        <input type="text" id="subj" name="subj" required><br><br>
+                        <label for="body">Message:</label><br>
+                        <textarea id="body" name="body" required></textarea><br><br>
+                        <button type="button" onclick="sendInstantEmail()">Send Email</button>
+                    </form>
+                </div>
+            `;
+            } else if (type === 'schedulemail') {
+                formHtml = `
+                    <div class="form-container">
+                        <form id="schedulemail-form">
+                            <label for="recieverid">Email Address:</label><br>
+                            <input type="text" id="recieverid" name="recieverid" required><br><br>
+                            <label for="subj">subj:</label><br>
+                            <input type="text" id="subj" name="subj" required><br><br>
+                            <label for="body">Message:</label><br>
+                            <textarea id="body" name="body" required></textarea><br><br>
+                            <label for="hr">Hour[hh]:</label><br>
+                            <input type="text" id="hr" name="hr" required><br><br>
+                            <label for="min">Minutes[mm]</label><br>
+                            <input type="text" id="min" name="min" required><br><br>
+                            <button type="button" onclick="sendScheduledEmail()">Send Schedulemail</button>
+                        </form>
+                    </div>
+                `;
+                }  else if (type === 'call') {
+                formHtml = `
+                    <div class="form-container">
+                        <form id="call-form">
+                            <label for="phone">Phone no:</label><br>
+                            <input type="text" id="phone" name="phone" required><br><br>
+                            <button type="button" onclick="makePhonecall()">Call</button>
+                        </form>
+                    </div>
+                `;
+            } else if (type === 'sms') {
+                formHtml = `
+                    <div class="form-container">
+                        <form id="sms-form">
+                            <label for="phone">Phone no:</label><br>
+                            <input type="text" id="phone" name="phone" required><br><br>
+                            <label for="message">Message: </label><br>
+                            <input type="text" id="message" name="message" required><br><br>
+                            <button type="button" onclick="sendSMS()">Send SMS</button>
+                        </form>
+                    </div>
+                `;
+            } else if (type === 'coordinates') {
+                formHtml = `
+                    <div class="form-container">
+                        <form id="coordinates-form">
+                            <label for="location">Enter Location:</label><br>
+                            <textarea id="location" name="location" required></textarea><br><br>
+                            <button type="button" onclick="getCoordinates()">Get Coordinates</button>
+                        </form>
+                    </div>
+                `;
+            }  else if (type === 'instagram') {
+                formHtml = `
+                  <div class="form-container">
+                      <form id="instagram-form">
+                          <label for="post-content">Post Content:</label><br>
+                          <textarea id="post-content" name="post-content" required></textarea><br><br>
+                          <button type="button" onclick="postInstagram()">Post on Instagram</button>
+                      </form>
+                  </div>
+              `;
+          }
+  
+          addChatLog('response', formHtml);
+      }
+      
+      function sendWhatsApp() {
+        const phone = document.getElementById('phone').value;
+        const message = document.getElementById('message').value;
+
+        const url = `http://127.0.0.1:5000/whatmsg/${encodeURIComponent(phone)}/${encodeURIComponent(message)}`;
+
+        fetch(url, {
+            method: 'GET',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addChatLog('response', `WhatsApp message sent to ${phone}: "${message}"`);
+            } else {
+                addChatLog('response', `Failed to send WhatsApp message: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            addChatLog('response', `Error sending WhatsApp message: ${error.message}`);
+        });
+
+        document.getElementById('whatsapp-form').reset();
+    }
+
+    function sendSMS() {
+        const phone = document.getElementById('phone').value;
+        const message = document.getElementById('message').value;
+
+        const url = `http://127.0.0.1:5000/sms/${encodeURIComponent(phone)}/${encodeURIComponent(message)}`;
+        console.log('Sending SMS request to:', url);
+
+        fetch(url, { method: 'GET' })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('SMS response data:', data);
+                if (data.success) {
+                    addChatLog('response', `SMS sent to ${phone}: "${message}"`);
+                } else {
+                    addChatLog('response', `Failed to send SMS: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error('SMS send error:', error);
+                addChatLog('response', `Error sending SMS: ${error.message}`);
+            });
+    }
+
+    function sendbulkWhatsApp() {
+        const msg = document.getElementById('msg').value;
+
+        const url = `http://127.0.0.1:5000/bulkwhatmsg/${encodeURIComponent(msg)}`;
+
+        fetch(url, {
+            method: 'GET',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addChatLog('response', `WhatsApp message "${msg}" sent.`);
+            } else {
+                addChatLog('response', `Failed to send WhatsApp message: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            addChatLog('response', `Error sending WhatsApp message: ${error.message}`);
+        });
+
+        document.getElementById('bulkwhatsmsg-form').reset();
+    }
+
+      function makePhonecall() {
+
+        const phone = document.getElementById('phone').value;
+
+        const url = `http://127.0.0.1:5000/call/${encodeURIComponent(phone)}`;
+
+        fetch(url, {
+            method: 'GET',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addChatLog('response', `Call to ${phone} initiated.`);
+            } else {
+                addChatLog('response', `Call Initiated`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            addChatLog('response', `Error in making Phon Call: ${error.message}`);
+        });
+
+        document.getElementById('call-form').reset();
+      }
+
+      function getCoordinates() {
+
+        const location = document.getElementById('location').value;
+
+        const url = `http://127.0.0.1:5000/coordinates/${encodeURIComponent(location)}`;
+
+        fetch(url, {
+            method: 'GET',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addChatLog('response', `Coordinates:  ${location}`);
+            } else {
+                addChatLog('response', `Coordinates:  ${location}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            addChatLog('response', `Error in fetching Coordinates ${error.message}`);
+        });
+
+        document.getElementById('coordinates-form').reset();
+      }
+
+      function sendInstantEmail() {
+        const recieverid = document.getElementById('recieverid').value;
+        const subj = document.getElementById('subj').value;
+        const body = document.getElementById('body').value;
+        const url = `http://127.0.0.1:5000/instantMail/${encodeURIComponent(recieverid)}/${encodeURIComponent(subj)}/${encodeURIComponent(body)}`;
+
+        fetch(url, {
+            method: 'GET',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addChatLog('response', `mail sent to "${recieverid}"`);
+            }else {
+                addChatLog('response', `mail sent to "${recieverid}"`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            addChatLog('response', `Error sending Mail: ${error.message}`);
+        });
+
+          
+
+        document.getElementById('email-form').reset();
+      }
+
+      function sendScheduledEmail() {
+        const recieverid = document.getElementById('recieverid').value;
+        const subj = document.getElementById('subj').value;
+        const body = document.getElementById('body').value;
+        const hour = document.getElementById('hr').value;
+        const min = document.getElementById('min').value;
+        const url = `http://127.0.0.1:5000/instantMail/${encodeURIComponent(recieverid)}/${encodeURIComponent(subj)}/${encodeURIComponent(body)}/${encodeURIComponent(hour)}/${encodeURIComponent(minute)}`;
+
+        fetch(url, {
+            method: 'GET',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addChatLog('response', `mail sent to "${recieverid}"`);
+            }else {
+                addChatLog('response', `mail sent to "${recieverid}"`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            addChatLog('response', `Error sending Mail: ${error.message}`);
+        });
+
+          
+
+        document.getElementById('schedulemail-form').reset();
+      }
+
+      function postInstagram() {
+          const content = document.getElementById('post-content').value;
+
+          addChatLog('response', `Posting on Instagram: "${content}"`);
+
+          document.getElementById('instagram-form').reset();
+      }
+
+      function showCameraAccess() {
+        const cameraSection = document.getElementById('camera-section');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const snap = document.getElementById('snap');
+        const closeCamera = document.getElementById('close-camera'); // New close camera button
+        const context = canvas.getContext('2d');
+        let stream = null;
+    
+        cameraSection.classList.remove('hidden');
+    
+        // Request access to the user's camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function(mediaStream) {
+                stream = mediaStream;
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(function(err) {
+                console.log("An error occurred: " + err);
+            });
+    
+        snap.addEventListener('click', function() {
+            context.drawImage(video, 0, 0, 640, 480);
+        });
+    
+        closeCamera.addEventListener('click', function() {
+            cameraSection.classList.add('hidden');
+            // Stop all video streams when the camera is closed
+            if (stream) {
+                const tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+        });
+    }
+    
+
+      // Microphone functionality
+      const micButton = document.getElementById('mic-btn');
+      const chatInput = document.getElementById('chat-input');
+      
+      micButton.addEventListener('click', function() {
+          const recognition = new webkitSpeechRecognition(); // or SpeechRecognition
+          recognition.lang = 'en-US'; 
+          recognition.interimResults = false;
+          recognition.maxAlternatives = 1;
+
+          recognition.start();
+
+          recognition.onresult = function(event) {
+              const transcript = event.results[0][0].transcript;
+              chatInput.value = transcript; // Fill the chat input with recognized text
+              chatInput.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter' })); // Simulate Enter key press
+          };
+
+          recognition.onerror = function(event) {
+              console.error('Speech recognition error:', event.error);
+              addChatLog('response', 'Could not recognize speech. Please try again.');
+          };
+      });
+    </script>
+
+</body>
+</html>
